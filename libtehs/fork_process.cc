@@ -24,10 +24,6 @@ void fork_new_proc(active_t childFunc){
 
     printf("stop child process %d...\n",child_PID);
 
-    string command = "touch /home/zyx/workspace/tehs/tmp/"+to_string(getpid())+".lock";
-
-    system(command.c_str());
-
   }  else if (pid < 0){
     printf("FORK FAILED\n");
 

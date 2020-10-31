@@ -37,8 +37,6 @@ struct option longopts[] = {
     {0, 0, 0, 0},
 };
 
-
-
 void usage() {
   fprintf(stderr,
           "\n"
@@ -54,7 +52,27 @@ void usage() {
   exit(0);
 }
 
+void set_home_src() {
+  string bufferstr;
+  char *buffer;
+  //也可以将buffer作为输出参数
+  if((buffer = getcwd(NULL, 0)) == NULL)
+  {
+    perror("getcwd error");
+  }
+  else
+  {
+    string string1 = "cmake-build-debug-coverage";
+    bufferstr = buffer;
+    size_t size = bufferstr.size() - string1.size();
+    home_src = bufferstr.substr(0, size-1);
+    free(buffer);
+  }
+}
+
 void list() {
+  set_home_src();
+
   string filename;
   filename = home_src + "/config/proc/fatherProcess";
 
@@ -65,8 +83,7 @@ void list() {
   while (getline(list_file, line)) {
     cout << line;
   }
-
-  list_file.close();
+    list_file.close();
 }
 
 void save_proc_id(string home, __pid_t pid) {
@@ -124,6 +141,10 @@ void sendMassage() {
 }
 
 void conn_to_clinet() {
+  //创建零时文件
+  string command = "touch "+ home_src+ "/tmp/" + to_string(getpid())+".lock";
+  system(command.c_str());
+
   //client socket
   char client_buffer[1024];
 
@@ -143,19 +164,22 @@ void conn_to_clinet() {
 
 void sig_handler(int i) {
   while (true) {
-    string cmd = "ls /home/zyx/workspace/tehs/tmp";
+    string cmd = "ls "+ home_src +"/tmp";
     FILE *stream = popen(cmd.c_str(), "r");
 
     char *buffer;
     if (stream != NULL) {
       // 每次从 stream 中读取指定大小的内容
-      while (fgets(buffer, 100, stream))
-        printf(buffer);
+      while (fgets(buffer, 100, stream)) {
+        string bufferstr = buffer;
+      }
+
       if (buffer == NULL)
         exit(1);
 
       pclose(stream);
     }
+    printf("xxxx");
     exit(i);
   }
 }
@@ -205,23 +229,7 @@ int listen_and_accept(int port) {
   return conn;
 }
 
-void set_home_src() {
-  string bufferstr;
-  char *buffer;
-  //也可以将buffer作为输出参数
-  if((buffer = getcwd(NULL, 0)) == NULL)
-  {
-    perror("getcwd error");
-  }
-  else
-  {
-    string string1 = "cmake-build-debug-coverage";
-    bufferstr = buffer;
-    size_t size = bufferstr.size() - string1.size();
-    home_src = bufferstr.substr(0, size-1);
-    free(buffer);
-  }
-}
+
 
 [[noreturn]] void parentActive() {
   set_home_src();
@@ -282,7 +290,11 @@ void set_home_src() {
     }
     close(fd);
     close(conn);
-    system("rm -rf /home/zyx/workspace/tehs/tmp/*");
+    string command;
+    const char *cmd;
+    command = "rm -rf "+ home_src +"/tmp/*";
+    cmd=command.c_str();
+    system(cmd);
   }
 }
 
